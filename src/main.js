@@ -96,10 +96,10 @@ function productTemplate(_product) {
         ${identiconTemplate(_product.owner)}
         </div>
         <h2 class="card-title fs-4 fw-bold mt-2">${_product.name}</h2>
-        <p class="card-text mb-4" style="min-height: 82px">
+        <p class="card-text mb-1" style="min-height: 65px">
           ${_product.description}             
         </p>
-        <p class="card-text mt-4">
+        <p class="card-text mt-1">
           <i class="bi bi-geo-alt-fill"></i>
           <span>${_product.location}</span>
         </p>
@@ -197,3 +197,19 @@ document.querySelector("#marketplace").addEventListener("click", async (e) => {
     }
   }
 })  
+
+
+//rerenders all the products
+document.querySelector("#heading").addEventListener("click", async () => {
+  notification("⌛ Loading...")
+  await getProducts()
+  notificationOff()
+});
+
+
+// checks and updates the balance of wallet
+document.querySelector("#Balance").addEventListener("click", async () => {
+  notification("⌛ Loading...")
+  await getBalance()
+  notificationOff()
+})
