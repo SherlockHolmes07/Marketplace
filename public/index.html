@@ -41,6 +41,10 @@
         border-radius: 20px;
       }
 
+      .alert-green{
+        background-color: rgba(52, 219, 52, 0.475);
+      }
+
       #heading {
         border: solid 4px black;
         padding: 5px;
@@ -70,7 +74,7 @@
       }
 
       @media (max-width: 570px) {
-        .navbar button{
+        .navbar button {
           width: 100%;
           margin-top: 5px;
           margin-bottom: 10px;
@@ -83,7 +87,6 @@
 
   <body>
     <div class="container mt-2" style="max-width: 72em">
-
       <!--Navbar Starts-->
       <nav class="navbar">
         <div class="container-fluid">
@@ -120,7 +123,7 @@
       </nav>
       <!--Navbar Ends-->
 
-      <div class="alert alert-warning sticky-top mt-2" role="alert">
+      <div class="alert alert-light sticky-top mt-2" id="alert" role="alert">
         <span id="notification">⌛ Loading...</span>
       </div>
 
@@ -145,9 +148,9 @@
             data-toggle="dropdown"
             aria-haspopup="true"
             aria-expanded="false"
-            style="height: 55px;"
+            style="height: 55px"
           >
-          Categories
+            Categories
           </button>
           <div class="dropdown-menu">
             <a class="dropdown-item" href="#">Action</a>
@@ -155,13 +158,12 @@
             <a class="dropdown-item" href="#">Something else here</a>
           </div>
         </div>
-
       </div>
 
       <main id="marketplace" class="row"></main>
     </div>
 
-    <!--*********Modal****************-->
+    <!--************Modal****************-->
     <div
       class="modal fade"
       id="addModal"
@@ -215,6 +217,35 @@
                     placeholder="Enter location"
                   />
                 </div>
+                <div class="col input-group mb-3">
+                  <div class="input-group-prepend">
+                    <label class="input-group-text" for="inputGroupSelect01"
+                      >Categories</label
+                    >
+                  </div>
+                  <select
+                    class="form-control custom-select"
+                    id="inputGroupSelect01"
+                  >
+                    <option value="Home Products">Home Products</option>
+                    <option value="Fashion & Beauty">Fashion & Beauty</option>
+                    <option value="Toys & Games">Toys & Games</option>
+                    <option value="Electronics">Electronics</option>
+                    <option value="Automotive">Automotive</option>
+                    <option value="Books">Books</option>
+                    <option value="Cell Phones & Accessories">Cell Phones & Accessories</option>
+                    <option value="Clothing & Shoes">Clothing & Shoes</option>
+                    <option value="Computers">Computers</option>
+                    <option value="Collectibles & Fine Arts">Collectibles & Fine Arts</option>
+                    <option value="Handmade">Handmade</option>
+                    <option value="Health & Fitness">Health & Fitness</option>
+                    <option value="Sports & Outdoors">Sports & Outdoors</option>
+                    <option value="Office Products">Office Products</option>
+                    <option value="Real Estate">Real Estate</option>
+                    <option value="Others">Others</option>
+                  </select>
+                </div>
+
                 <div class="col">
                   <input
                     type="text"
@@ -223,6 +254,18 @@
                     placeholder="Enter price"
                   />
                 </div>
+
+                <div class="col">
+                  <input
+                    type="number"
+                    id="items"
+                    class="form-control mb-2"
+                    placeholder="Enter the number of items"
+                    min="1"
+                  />
+                </div>
+
+
               </div>
             </form>
           </div>
@@ -271,6 +314,5 @@
       integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
       crossorigin="anonymous"
     ></script>
-
   </body>
 </html>

@@ -1,62 +1,87 @@
-import Web3 from 'web3'
-import { newKitFromWeb3 } from '@celo/contractkit'
-import BigNumber from "bignumber.js"
-import marketplaceAbi from '../contract/marketplace.abi.json'
-import erc20Abi from "../contract/erc20.abi.json"
+import Web3 from "web3";
+import { newKitFromWeb3 } from "@celo/contractkit";
+import BigNumber from "bignumber.js";
+import marketplaceAbi from "../contract/marketplace.abi.json";
+import erc20Abi from "../contract/erc20.abi.json";
 
 
-const ERC20_DECIMALS = 18
-const MPContractAddress = "0x28510A5FD51ABdD1eF8EBbF10668Ebf3671010c0"
-const cUSDContractAddress = "0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1"
+const ERC20_DECIMALS = 18;
+const MPContractAddress = "0x8E79F92a542f847F032b96800F156dD8A4Dd5522"; //Marketplace Contract Address
+const cUSDContractAddress = "0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1"; //Erc20 contract address
 
+// list of categories
+const Categories = [
+  "Home Products",
+  "Fashion & Beauty",
+  "Toys & Games",
+  "Electronics",
+  "Automotive",
+  "Books",
+  "Cell Phones & Accessories",
+  "Clothing & Shoes",
+  "Computers",
+  "Collectibles & Fine Arts",
+  "Handmade",
+  "Health & Fitness",
+  "Sports & Outdoors",
+  "Office Products",
+  "Real Estate",
+  "Others",
+];
 
-let kit
-let contract
-let products = []
+let kit;
+let contract;
+let products = [];
 
+//Connects the wallet gets the account and initializes the contract
 const connectCeloWallet = async function () {
+  //Checks for the wallted
   if (window.celo) {
-    notification("⚠️ Please approve this DApp to use it.")
+    notification("⚠️ Please approve this DApp to use it.");
     try {
-      await window.celo.enable()
-      notificationOff()
+      //enables the celo
+      await window.celo.enable();
+      notificationOff();
 
-      const web3 = new Web3(window.celo)
-      kit = newKitFromWeb3(web3)
-
-      const accounts = await kit.web3.eth.getAccounts()
-      kit.defaultAccount = accounts[0]
-
-      contract = new kit.web3.eth.Contract(marketplaceAbi, MPContractAddress)
+      const web3 = new Web3(window.celo);
+      kit = newKitFromWeb3(web3);
+      //gets the default account used
+      const accounts = await kit.web3.eth.getAccounts();
+      kit.defaultAccount = accounts[0];
+      //calles for the contract using its abi and contract address
+      contract = new kit.web3.eth.Contract(marketplaceAbi, MPContractAddress);
     } catch (error) {
-      notification(`⚠️ ${error}.`)
+      notification(`⚠️ ${error}.`);
     }
   } else {
-    notification("⚠️ Please install the CeloExtensionWallet.")
+    notification("⚠️ Please install the CeloExtensionWallet.");
   }
-}
+};
 
+// Calls for the approval of the transcation
 async function approve(_price) {
-  const cUSDContract = new kit.web3.eth.Contract(erc20Abi, cUSDContractAddress)
+  const cUSDContract = new kit.web3.eth.Contract(erc20Abi, cUSDContractAddress);
 
   const result = await cUSDContract.methods
     .approve(MPContractAddress, _price)
-    .send({ from: kit.defaultAccount })
-  return result
+    .send({ from: kit.defaultAccount });
+  return result;
 }
 
+// gets the balance of the connected account 
 const getBalance = async function () {
-  const totalBalance = await kit.getTotalBalance(kit.defaultAccount)
-  const cUSDBalance = totalBalance.cUSD.shiftedBy(-ERC20_DECIMALS).toFixed(2)
-  document.querySelector("#balance").textContent = cUSDBalance
-}
+  const totalBalance = await kit.getTotalBalance(kit.defaultAccount);
+  const cUSDBalance = totalBalance.cUSD.shiftedBy(-ERC20_DECIMALS).toFixed(2);
+  document.querySelector("#balance").textContent = cUSDBalance;
+};
 
-const getProducts = async function() {
-  const _productsLength = await contract.methods.getProductsLength().call()
-  const _products = []
+// gets all the products 
+const getProducts = async function () {
+  const _productsLength = await contract.methods.getProductsLength().call();
+  const _products = [];
   for (let i = 0; i < _productsLength; i++) {
     let _product = new Promise(async (resolve, reject) => {
-      let p = await contract.methods.readProduct(i).call()
+      let p = await contract.methods.readProduct(i).call();
       resolve({
         index: i,
         owner: p[0],
@@ -66,24 +91,29 @@ const getProducts = async function() {
         location: p[4],
         price: new BigNumber(p[5]),
         sold: p[6],
-      })
-    })
-    _products.push(_product)
+      });
+    });
+    if (_product.owner == "0x0000000000000000000000000000000000000000") {
+      continue;
+    }
+    _products.push(_product);
   }
-  products = await Promise.all(_products)
-  renderProducts()
-}
+  products = await Promise.all(_products);
+  renderProducts();
+};
 
+// renders all the products in the products array
 function renderProducts() {
-  document.getElementById("marketplace").innerHTML = ""
+  document.getElementById("marketplace").innerHTML = "";
   products.forEach((_product) => {
-    const newDiv = document.createElement("div")
-    newDiv.className = "col-md-4"
-    newDiv.innerHTML = productTemplate(_product)
-    document.getElementById("marketplace").appendChild(newDiv)
-  })
+    const newDiv = document.createElement("div");
+    newDiv.className = "col-md-4";
+    newDiv.innerHTML = productTemplate(_product);
+    document.getElementById("marketplace").appendChild(newDiv);
+  });
 }
 
+//returns the template of the product
 function productTemplate(_product) {
   return `
     <div class="card mb-4">
@@ -112,7 +142,7 @@ function productTemplate(_product) {
         </div>
       </div>
     </div>
-  `
+  `;
 }
 
 function identiconTemplate(_address) {
@@ -122,7 +152,7 @@ function identiconTemplate(_address) {
       size: 8,
       scale: 16,
     })
-    .toDataURL()
+    .toDataURL();
 
   return `
   <div class="rounded-circle overflow-hidden d-inline-block border border-white border-2 shadow-sm m-0">
@@ -131,85 +161,99 @@ function identiconTemplate(_address) {
         <img src="${icon}" width="48" alt="${_address}">
     </a>
   </div>
-  `
+  `;
 }
 
-function notification(_text) {
-  document.querySelector(".alert").style.display = "block"
-  document.querySelector("#notification").textContent = _text
+// Generates the notification
+function notification(_text, type) {
+  if(type === "sucess") {
+    document.querySelector(".alert").classList.remove("alert-light");
+    document.querySelector(".alert").classList.add("alert-green");
+  }
+  document.querySelector(".alert").style.display = "block";
+  document.querySelector("#notification").textContent = _text;
 }
 
+// hides the notification
 function notificationOff() {
-  document.querySelector(".alert").style.display = "none"
+  document.querySelector(".alert").style.display = "none";
+  document.querySelector(".alert").classList.remove("alert-green");
+  document.querySelector(".alert").classList.add("alert-light");
 }
 
+// event listner works on load
 window.addEventListener("load", async () => {
-  notification("⌛ Loading...")
-  await connectCeloWallet()
-  await getBalance()
-  await getProducts()
-  notificationOff()
+  notification("⌛ Loading...");
+  await connectCeloWallet();
+  await getBalance();
+  await getProducts();
+  notificationOff();
 });
 
+// Add new product button
 document
   .querySelector("#newProductBtn")
   .addEventListener("click", async (e) => {
+    // gets all the input given in the form and stores it in params
     const params = [
       document.getElementById("newProductName").value,
       document.getElementById("newImgUrl").value,
       document.getElementById("newProductDescription").value,
       document.getElementById("newLocation").value,
+      document.getElementById("inputGroupSelect01").value,
       new BigNumber(document.getElementById("newPrice").value)
-      .shiftedBy(ERC20_DECIMALS)
-      .toString()
-    ]
-    notification(`⌛ Adding "${params[0]}"...`)
+        .shiftedBy(ERC20_DECIMALS)
+        .toString(),
+      document.getElementById("items").value,
+    ];
+    
+    notification(`⌛ Adding "${params[0]}"...`);
     try {
+      //Calls the writeProduct method on the contract with the params as parameter
       const result = await contract.methods
         .writeProduct(...params)
-        .send({ from: kit.defaultAccount })
+        .send({ from: kit.defaultAccount });
     } catch (error) {
-      notification(`⚠️ ${error}.`)
+      notification(`⚠️ ${error}.`);
     }
-    notification(`🎉 You successfully added "${params[0]}".`)
-    getProducts()
-  })
+    notification(`🎉 You successfully added "${params[0]}".`, "sucess");
+    getProducts();
+  });
 
+// implements buying functionality
 document.querySelector("#marketplace").addEventListener("click", async (e) => {
   if (e.target.className.includes("buyBtn")) {
-    const index = e.target.id
-    notification("⌛ Waiting for payment approval...")
+    const index = e.target.id;
+    notification("⌛ Waiting for payment approval...");
     try {
-      await approve(products[index].price)
+      await approve(products[index].price);
     } catch (error) {
-      notification(`⚠️ ${error}.`)
+      notification(`⚠️ ${error}.`);
     }
-    notification(`⌛ Awaiting payment for "${products[index].name}"...`)
+    notification(`⌛ Awaiting payment for "${products[index].name}"...`);
     try {
       const result = await contract.methods
         .buyProduct(index)
-        .send({ from: kit.defaultAccount })
-      notification(`🎉 You successfully bought "${products[index].name}".`)
-      getProducts()
-      getBalance()
+        .send({ from: kit.defaultAccount });
+      notification(`🎉 You successfully bought "${products[index].name}".`);
+      getProducts();
+      getBalance();
     } catch (error) {
-      notification(`⚠️ ${error}.`)
+      notification(`⚠️ ${error}.`);
     }
   }
-})  
-
+});
 
 //rerenders all the products
 document.querySelector("#heading").addEventListener("click", async () => {
-  notification("⌛ Loading...")
-  await getProducts()
-  notificationOff()
+  notification("⌛ Loading...");
+  await getProducts();
+  notificationOff();
 });
-
 
 // checks and updates the balance of wallet
 document.querySelector("#Balance").addEventListener("click", async () => {
-  notification("⌛ Loading...")
-  await getBalance()
-  notificationOff()
-})
+  notification("⌛ Loading...");
+  await getBalance();
+  notificationOff();
+});
