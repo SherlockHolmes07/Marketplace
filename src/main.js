@@ -4,9 +4,8 @@ import BigNumber from "bignumber.js";
 import marketplaceAbi from "../contract/marketplace.abi.json";
 import erc20Abi from "../contract/erc20.abi.json";
 
-
 const ERC20_DECIMALS = 18;
-const MPContractAddress = "0x8E79F92a542f847F032b96800F156dD8A4Dd5522"; //Marketplace Contract Address
+const MPContractAddress = "0xde3e04987A00aB3b7CE2401dB665E4E7BD3E806b"; //Marketplace Contract Address
 const cUSDContractAddress = "0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1"; //Erc20 contract address
 
 // list of categories
@@ -68,14 +67,14 @@ async function approve(_price) {
   return result;
 }
 
-// gets the balance of the connected account 
+// gets the balance of the connected account
 const getBalance = async function () {
   const totalBalance = await kit.getTotalBalance(kit.defaultAccount);
   const cUSDBalance = totalBalance.cUSD.shiftedBy(-ERC20_DECIMALS).toFixed(2);
   document.querySelector("#balance").textContent = cUSDBalance;
 };
 
-// gets all the products 
+// gets all the products
 const getProducts = async function () {
   const _productsLength = await contract.methods.getProductsLength().call();
   const _products = [];
@@ -166,7 +165,7 @@ function identiconTemplate(_address) {
 
 // Generates the notification
 function notification(_text, type) {
-  if(type === "sucess") {
+  if (type === "sucess") {
     document.querySelector(".alert").classList.remove("alert-light");
     document.querySelector(".alert").classList.add("alert-green");
   }
@@ -206,7 +205,7 @@ document
         .toString(),
       document.getElementById("items").value,
     ];
-    
+
     notification(`⌛ Adding "${params[0]}"...`);
     try {
       //Calls the writeProduct method on the contract with the params as parameter
