@@ -31,6 +31,7 @@ const Categories = [
 let kit;
 let contract;
 let products = [];
+let Wishlist = [];
 
 //Connects the wallet gets the account and initializes the contract
 const connectCeloWallet = async function () {
@@ -88,8 +89,11 @@ const getProducts = async function () {
         image: p[2],
         description: p[3],
         location: p[4],
-        price: new BigNumber(p[5]),
-        sold: p[6],
+        category: p[5],
+        price: new BigNumber(p[6]),
+        sold: p[7],
+        number_items: p[8],
+        status: p[9],
       });
     });
     if (_product.owner == "0x0000000000000000000000000000000000000000") {
@@ -98,7 +102,17 @@ const getProducts = async function () {
     _products.push(_product);
   }
   products = await Promise.all(_products);
+  await getWishlist();
   renderProducts();
+};
+
+const getWishlist = async()=>{
+   try{
+       Wishlist = await contract.methods.getWishlist().call();
+   }
+   catch(e){
+        notification(`${e}`);
+   }
 };
 
 // renders all the products in the products array
@@ -114,7 +128,7 @@ function renderProducts() {
 
 //returns the template of the product
 function productTemplate(_product) {
-  return `
+  let base =  `
     <div class="card mb-4">
       <img class="card-img-top" src="${_product.image}" alt="...">
       <div class="position-absolute top-0 end-0 bg-warning mt-4 px-2 py-1 rounded-start">
@@ -139,11 +153,22 @@ function productTemplate(_product) {
             Buy for ${_product.price.shiftedBy(-ERC20_DECIMALS).toFixed(2)} cUSD
           </a>
         </div>
-      </div>
-    </div>
   `;
+
+  if(Wishlist.includes(_product.index)){
+      base += `<div class="d-grid gap-2 mt-2"> <a class="btn btn-lg btn btn-danger" id="wishlistBtn"
+      onclick="removeFromWishlist(${_product.index})">Remove from Wishlist</a></div> </div> </div>`;
+  }
+  else{
+      base += `<div class="d-grid gap mt-2"> <a class="btn btn-lg btn btn-pink" id="wishlistBtn" 
+      onclick="addToWishlist(${_product.index})">Add to Wishlist</a></div> </div> </div>`;
+  }
+ 
+  return base;
 }
 
+
+//returns the template of the identifications
 function identiconTemplate(_address) {
   const icon = blockies
     .create({
