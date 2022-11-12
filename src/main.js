@@ -5,7 +5,7 @@ import marketplaceAbi from "../contract/marketplace.abi.json";
 import erc20Abi from "../contract/erc20.abi.json";
 
 const ERC20_DECIMALS = 18;
-const MPContractAddress = "0xde3e04987A00aB3b7CE2401dB665E4E7BD3E806b"; //Marketplace Contract Address
+const MPContractAddress = "0xd5130F7F552fB8a05b4E4961Ee60420819b8ead2"; //Marketplace Contract Address
 const cUSDContractAddress = "0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1"; //Erc20 contract address
 
 // list of categories
@@ -106,13 +106,12 @@ const getProducts = async function () {
   renderProducts();
 };
 
-const getWishlist = async()=>{
-   try{
-       Wishlist = await contract.methods.getWishlist().call();
-   }
-   catch(e){
-        notification(`${e}`);
-   }
+const getWishlist = async () => {
+  try {
+    Wishlist = await contract.methods.getWishlist().call();
+  } catch (e) {
+    notification(`${e}`);
+  }
 };
 
 // renders all the products in the products array
@@ -128,7 +127,7 @@ function renderProducts() {
 
 //returns the template of the product
 function productTemplate(_product) {
-  let base =  `
+  let base = `
     <div class="card mb-4">
       <img class="card-img-top" src="${_product.image}" alt="...">
       <div class="position-absolute top-0 end-0 bg-warning mt-4 px-2 py-1 rounded-start">
@@ -154,19 +153,17 @@ function productTemplate(_product) {
           </a>
         </div>
   `;
-
-  if(Wishlist.includes(_product.index)){
-      base += `<div class="d-grid gap-2 mt-2"> <a class="btn btn-lg btn btn-danger" id="wishlistBtn"
+  let num = _product.index;
+  if (Wishlist.includes(num.toString())) {
+    base += `<div class="d-grid gap-2 mt-2"> <a class="btn btn-lg btn btn-danger" id="wishlistBtnR"
       onclick="removeFromWishlist(${_product.index})">Remove from Wishlist</a></div> </div> </div>`;
+  } else {
+    base += `<div class="d-grid gap mt-2"> <a class="btn btn-lg btn btn-pink addWish" id="${_product.index}" 
+      >Add to Wishlist</a></div> </div> </div>`;
   }
-  else{
-      base += `<div class="d-grid gap mt-2"> <a class="btn btn-lg btn btn-pink" id="wishlistBtn" 
-      onclick="addToWishlist(${_product.index})">Add to Wishlist</a></div> </div> </div>`;
-  }
- 
+
   return base;
 }
-
 
 //returns the template of the identifications
 function identiconTemplate(_address) {
@@ -190,9 +187,18 @@ function identiconTemplate(_address) {
 
 // Generates the notification
 function notification(_text, type) {
-  if (type === "sucess") {
+  if (type === "success") {
     document.querySelector(".alert").classList.remove("alert-light");
+    document.querySelector(".alert").classList.remove("alert-danger");
     document.querySelector(".alert").classList.add("alert-green");
+  } else if (type === "error") {
+    document.querySelector("alert").classList.remove("alert-light");
+    document.querySelector(".alert").classList.remove("alert-green");
+    document.querySelector(".alert").classList.add("alert-danger");
+  } else {
+    document.querySelector(".alert").classList.remove("alert-green");
+    document.querySelector(".alert").classList.remove("alert-danger");
+    document.querySelector(".alert").classList.add("alert-light");
   }
   document.querySelector(".alert").style.display = "block";
   document.querySelector("#notification").textContent = _text;
@@ -201,8 +207,6 @@ function notification(_text, type) {
 // hides the notification
 function notificationOff() {
   document.querySelector(".alert").style.display = "none";
-  document.querySelector(".alert").classList.remove("alert-green");
-  document.querySelector(".alert").classList.add("alert-light");
 }
 
 // event listner works on load
@@ -231,6 +235,13 @@ document
       document.getElementById("items").value,
     ];
 
+    // checks if all the fields are filled
+    params.map((p) => {
+      if (p == "") {
+        notification("Please fill all the fields", "error");
+        throw new Error("Please fill all the fields");
+      }
+    });
     notification(`⌛ Adding "${params[0]}"...`);
     try {
       //Calls the writeProduct method on the contract with the params as parameter
@@ -238,33 +249,78 @@ document
         .writeProduct(...params)
         .send({ from: kit.defaultAccount });
     } catch (error) {
-      notification(`⚠️ ${error}.`);
+      // if the transaction fails
+      notification(`⚠️ ${error}.`, "error");
     }
-    notification(`🎉 You successfully added "${params[0]}".`, "sucess");
+    // if the transcation is successful
+    notification(`🎉 You successfully added "${params[0]}".`, "success");
+    // reloads the page
     getProducts();
   });
 
 // implements buying functionality
 document.querySelector("#marketplace").addEventListener("click", async (e) => {
-  if (e.target.className.includes("buyBtn")) {
+  // checks if the button clicked is buy button
+  if (e.target.className.includes("buyBtn")) 
+  {
     const index = e.target.id;
+    console.log(index);
     notification("⌛ Waiting for payment approval...");
+
+    // Calls the approve method
     try {
       await approve(products[index].price);
     } catch (error) {
-      notification(`⚠️ ${error}.`);
+      notification(`⚠️ ${error}.`, "error");
     }
+
     notification(`⌛ Awaiting payment for "${products[index].name}"...`);
+
+    // calls the buyProduct method on the contract with the index of the product as parameter
     try {
       const result = await contract.methods
         .buyProduct(index)
         .send({ from: kit.defaultAccount });
-      notification(`🎉 You successfully bought "${products[index].name}".`);
+      notification(
+        `🎉 You successfully bought "${products[index].name}".`,
+        "success"
+      );
       getProducts();
       getBalance();
-    } catch (error) {
-      notification(`⚠️ ${error}.`);
+    } 
+    catch (error) {
+      notification(`⚠️ ${error}.`, "error");
     }
+
+  }
+  // checks if the button clicked is add to wishlist button
+  else if (e.target.className.includes("addWish")) {
+
+    const index = e.target.id;
+    console.log(index);
+    notification("⌛ Adding to Wishlist...");
+
+    // calls the addToWishlist method on the contract with the index of the product as parameter
+    try {
+      
+      const result = await contract.methods
+        .addToWishlist(index)
+        .send({ from: kit.defaultAccount });
+
+      notification(
+        `🎉 You successfully added "${products[index].name}" to wishlist.`,
+        "success"
+      );
+      //Wishlist.push(index);
+      getProducts();
+      getBalance();
+    } 
+    catch (error) {
+      // if the transaction fails
+      console.log(error);
+      notification(`⚠️ ${error}.`, "error");
+    }
+
   }
 });
 
@@ -273,6 +329,7 @@ document.querySelector("#heading").addEventListener("click", async () => {
   notification("⌛ Loading...");
   await getProducts();
   notificationOff();
+  console.log(Wishlist);
 });
 
 // checks and updates the balance of wallet
