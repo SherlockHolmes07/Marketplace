@@ -153,11 +153,15 @@ function productTemplate(_product) {
           </a>
         </div>
   `;
+  
   let num = _product.index;
+  // checks if the product is in the wishlist
   if (Wishlist.includes(num.toString())) {
     base += `<div class="d-grid gap-2 mt-2"> <a class="btn btn-lg btn btn-danger" id="wishlistBtnR"
       onclick="removeFromWishlist(${_product.index})">Remove from Wishlist</a></div> </div> </div>`;
-  } else {
+  }
+  // checks if the product is not in the wishlist 
+  else {
     base += `<div class="d-grid gap mt-2"> <a class="btn btn-lg btn btn-pink addWish" id="${_product.index}" 
       >Add to Wishlist</a></div> </div> </div>`;
   }
@@ -188,18 +192,22 @@ function identiconTemplate(_address) {
 // Generates the notification
 function notification(_text, type) {
   if (type === "success") {
+    //success
     document.querySelector(".alert").classList.remove("alert-light");
     document.querySelector(".alert").classList.remove("alert-danger");
     document.querySelector(".alert").classList.add("alert-green");
   } else if (type === "error") {
-    document.querySelector("alert").classList.remove("alert-light");
+    //error
+    document.querySelector(".alert").classList.remove("alert-light");
     document.querySelector(".alert").classList.remove("alert-green");
     document.querySelector(".alert").classList.add("alert-danger");
   } else {
+    //default
     document.querySelector(".alert").classList.remove("alert-green");
     document.querySelector(".alert").classList.remove("alert-danger");
     document.querySelector(".alert").classList.add("alert-light");
   }
+  //show notification
   document.querySelector(".alert").style.display = "block";
   document.querySelector("#notification").textContent = _text;
 }
@@ -236,12 +244,11 @@ document
     ];
 
     // checks if all the fields are filled
-    params.map((p) => {
-      if (p == "") {
-        notification("Please fill all the fields", "error");
-        throw new Error("Please fill all the fields");
-      }
-    });
+    if (params.includes("") || params.includes(NaN)) {
+      notification("Please fill all the fields", "error");
+      return;
+    }
+
     notification(`⌛ Adding "${params[0]}"...`);
     try {
       //Calls the writeProduct method on the contract with the params as parameter
@@ -302,7 +309,6 @@ document.querySelector("#marketplace").addEventListener("click", async (e) => {
 
     // calls the addToWishlist method on the contract with the index of the product as parameter
     try {
-      
       const result = await contract.methods
         .addToWishlist(index)
         .send({ from: kit.defaultAccount });
@@ -320,8 +326,9 @@ document.querySelector("#marketplace").addEventListener("click", async (e) => {
       console.log(error);
       notification(`⚠️ ${error}.`, "error");
     }
-
   }
+
+  
 });
 
 //rerenders all the products
