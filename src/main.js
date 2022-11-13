@@ -200,7 +200,6 @@ function productTemplate(_product, status) {
     base += `
     <div id="comment-review${_product.index}" style="display: none;">
     <ul class="d-grid gap dibba mt-3 pt-2 pr-2 pl-2" id="review${_product.index}">
-            <li class=" p-2 comment mt-1">  la la la </li>
     </ul> 
     
     <div class="card-footer py-3 border-0 mt-3" style="background-color: #f8f9fa;">
@@ -208,7 +207,7 @@ function productTemplate(_product, status) {
               <div class="form-outline w-100">
                 <textarea class="form-control" id="textAreaExample" rows="4"
                   style="background: #fff;"></textarea>
-                <label class="form-label" for="textAreaExample">Comment</label>
+                <label class="form-label" for="textAreaExample">Comments</label>
               </div>
             </div>
             <div class="float-end mt-2 pt-1">
@@ -455,6 +454,44 @@ document.querySelector("#marketplace").addEventListener("click", async (e) => {
       console.log(error);
       notification(`⚠️ ${error}.`, "error");
     }
+  }
+  // checks if the button clicked id Reviews button
+  else if(e.target.className.includes("Reviews")) {
+    const index = e.target.id;
+    const vis = document.getElementById(`comment-review${index}`).style.display;
+
+    // checks if the review section is visible or not
+    if(vis === "none") {
+        // loading notification
+        notification("⌛ Loading Reviews...");
+       let Comments;
+       // calls the getReview method on the contract with the index of the product as parameter
+       try {
+          Comments = await contract.methods.getReview(index).call();
+          console.log(Comments);
+
+          // if there are no reviews
+          if(Comments.length === 0) {
+            document.getElementById(`review${index}`).innerHTML = "No reviews yet";
+          }
+
+          // loops through the comments and appends them to the review section
+          Comments.forEach((comment) => {
+              document.getElementById(`review${index}`).innerHTML += `<li class=" p-2 comment mt-1"> ${comment} </li>`;
+          });
+          notificationOff();
+          document.getElementById(`comment-review${index}`).style.display = "block";
+       }
+        catch(error) {
+          console.log(error);
+          notification(`⚠️ ${error}.`, "error");
+        }
+    }
+    // if the review section is visible
+    else {
+      document.getElementById(`comment-review${index}`).style.display = "none";
+    }
+
   }
 });
 
