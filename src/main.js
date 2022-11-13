@@ -5,7 +5,7 @@ import marketplaceAbi from "../contract/marketplace.abi.json";
 import erc20Abi from "../contract/erc20.abi.json";
 
 const ERC20_DECIMALS = 18;
-const MPContractAddress = "0xd5130F7F552fB8a05b4E4961Ee60420819b8ead2"; //Marketplace Contract Address
+const MPContractAddress = "0xd6E7Bde563594153Bd846C7005061d7b253DD984"; //Marketplace Contract Address
 const cUSDContractAddress = "0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1"; //Erc20 contract address
 
 // list of categories
@@ -79,7 +79,7 @@ const getBalance = async function () {
 const getProducts = async function () {
   const _productsLength = await contract.methods.getProductsLength().call();
   const _products = [];
-  for (let i = 0; i < _productsLength; i++) {
+  for (let i = 1; i < _productsLength; i++) {
     let _product = new Promise(async (resolve, reject) => {
       let p = await contract.methods.readProduct(i).call();
       resolve({
@@ -157,8 +157,7 @@ function productTemplate(_product) {
   let num = _product.index;
   // checks if the product is in the wishlist
   if (Wishlist.includes(num.toString())) {
-    base += `<div class="d-grid gap-2 mt-2"> <a class="btn btn-lg btn btn-danger" id="wishlistBtnR"
-      onclick="removeFromWishlist(${_product.index})">Remove from Wishlist</a></div> </div> </div>`;
+    base += `<div class="d-grid gap-2 mt-2"> <a class="btn btn-lg btn btn-danger removeWish" id="${_product.index}">Remove from Wishlist</a></div> </div> </div>`;
   }
   // checks if the product is not in the wishlist 
   else {
@@ -314,18 +313,37 @@ document.querySelector("#marketplace").addEventListener("click", async (e) => {
         .send({ from: kit.defaultAccount });
 
       notification(
-        `🎉 You successfully added "${products[index].name}" to wishlist.`,
+        `🎉 You successfully added product to wishlist.`,
         "success"
       );
       //Wishlist.push(index);
       getProducts();
-      getBalance();
+      //getBalance();
     } 
     catch (error) {
       // if the transaction fails
       console.log(error);
       notification(`⚠️ ${error}.`, "error");
     }
+  }
+  // checks if the button clicked is remove from wishlist button
+  else if (e.target.className.includes("removeWish")) {
+      const index = e.target.id;
+      console.log(index);
+      notification("⌛ Removing from Wishlist...");
+
+      // calls the deleteFromWishlist method on the contract with the index of the product as parameter
+      try {
+         const result = await contract.methods.deleteFromWishlist(index).send({ from: kit.defaultAccount });
+         notification(`🎉 You successfully removed product from wishlist.`, "success");
+         getProducts();
+         //getBalance();      
+      } 
+      catch (error) {
+          // if the transcation fails
+          console.log(error);
+          notification(`⚠️ ${error}.`, "error");
+      }
   }
 
   
