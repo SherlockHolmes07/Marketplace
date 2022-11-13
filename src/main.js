@@ -205,13 +205,13 @@ function productTemplate(_product, status) {
     <div class="card-footer py-3 border-0 mt-3" style="background-color: #f8f9fa;">
             <div class="d-flex flex-start w-100">
               <div class="form-outline w-100">
-                <textarea class="form-control" id="textAreaExample" rows="4"
+                <textarea class="form-control" id="textAreaExample${_product.index}" rows="4"
                   style="background: #fff;"></textarea>
                 <label class="form-label" for="textAreaExample">Comments</label>
               </div>
             </div>
             <div class="float-end mt-2 pt-1">
-              <button type="button" class="btn btn-success">Post comment</button>
+              <button type="button" class="btn btn-success Postcomment" id="${_product.index}">Post comment</button>
             </div>
       </div>
 
@@ -455,6 +455,7 @@ document.querySelector("#marketplace").addEventListener("click", async (e) => {
       notification(`⚠️ ${error}.`, "error");
     }
   }
+
   // checks if the button clicked id Reviews button
   else if(e.target.className.includes("Reviews")) {
     const index = e.target.id;
@@ -463,7 +464,7 @@ document.querySelector("#marketplace").addEventListener("click", async (e) => {
     // checks if the review section is visible or not
     if(vis === "none") {
         // loading notification
-        notification("⌛ Loading Reviews...");
+       // notification("⌛ Loading Reviews...");
        let Comments;
        // calls the getReview method on the contract with the index of the product as parameter
        try {
@@ -474,12 +475,15 @@ document.querySelector("#marketplace").addEventListener("click", async (e) => {
           if(Comments.length === 0) {
             document.getElementById(`review${index}`).innerHTML = "No reviews yet";
           }
+          else{
+            document.getElementById(`review${index}`).innerHTML = "";
+          }
 
           // loops through the comments and appends them to the review section
           Comments.forEach((comment) => {
               document.getElementById(`review${index}`).innerHTML += `<li class=" p-2 comment mt-1"> ${comment} </li>`;
           });
-          notificationOff();
+        //  notificationOff();
           document.getElementById(`comment-review${index}`).style.display = "block";
        }
         catch(error) {
@@ -490,9 +494,42 @@ document.querySelector("#marketplace").addEventListener("click", async (e) => {
     // if the review section is visible
     else {
       document.getElementById(`comment-review${index}`).style.display = "none";
+      notificationOff();
+    }
+  }
+
+  // checks if the button clicked is post Comment button
+  else if(e.target.className.includes("Postcomment")) {
+    const index = e.target.id;
+    const comment = document.getElementById(`textAreaExample${index}`).value;
+
+    if(comment === "") {
+      notification("⚠️ You have entered an empty Comment.", "error");
+      return;
     }
 
+    console.log(index,comment);
+    notification("⌛ Posting Comment...");
+
+    // calls the postReview method on the contract with the index of the product as parameter
+    try {
+      const result = await contract.methods
+        .addReview(index,comment)
+        .send({ from: kit.defaultAccount });
+      notification(
+        `🎉 You successfully posted your review.`,
+        "success"
+      );
+      document.getElementById(`review${index}`).innerHTML += `<li class=" p-2 comment mt-1"> ${comment} </li>`;
+      document.getElementById(`textAreaExample${index}`).value = "";
+
+    } catch (error) {
+      // if the transcation fails
+      console.log(error);
+      notification(`⚠️ ${error}.`, "error");
+    }
   }
+
 });
 
 //rerenders all the products
