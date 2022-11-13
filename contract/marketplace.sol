@@ -117,7 +117,7 @@ contract Marketplace {
     }
 
     // Returns all the product attributes for Proudct with provided _index
-    function readProduct(uint256 _index) public view returns(Product memory) {
+    function readProduct(uint256 _index) public view returns (Product memory) {
         return products[_index];
     }
 
@@ -166,6 +166,17 @@ contract Marketplace {
         return Wishlist[msg.sender];
     }
 
+    // Delete Item from the Wishlist
+    function deleteFromWishlist(uint256 _item) public {
+        // Loops through the array on Wishlist mapping for msg.sender
+        for (uint256 i = 0; i < Wishlist[msg.sender].length; i++) {
+            // if it has item then delete it
+            if (Wishlist[msg.sender][i] == _item) {
+                delete Wishlist[msg.sender][i];
+            }
+        }
+    }
+
     //Adds to the numberItems  in product
     function addItems(uint256 _index, uint256 _numberItems)
         public
@@ -183,7 +194,7 @@ contract Marketplace {
         delete reviews[_index];
     }
 
-    //Add review
+    //Adds the review
     function addReview(uint256 _index, string memory _review)
         public
         notDeleted(_index)
@@ -191,7 +202,7 @@ contract Marketplace {
         reviews[_index].push(_review);
     }
 
-    // gets review
+    // Returns all the reviews for a product with the _index
     function getReview(uint256 _index)
         public
         view
