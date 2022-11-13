@@ -120,27 +120,26 @@ function renderProducts(status) {
   let _Products = products;
   console.log(status);
   // filters the products by status
-  if(status !== "MyListings") {
-     _Products = products.filter((p) => p.status == "1");
-  }
-  else {
+  if (status !== "MyListings") {
+    _Products = products.filter((p) => p.status == "1");
+  } else {
     _Products = products.filter((p) => p.owner == kit.defaultAccount);
   }
 
-  if(status === "Wishlist") {
-      _Products = _Products.filter((p) => Wishlist.includes(p.index.toString()));
+  if (status === "Wishlist") {
+    _Products = _Products.filter((p) => Wishlist.includes(p.index.toString()));
   }
 
   _Products.forEach((_product) => {
     const newDiv = document.createElement("div");
     newDiv.className = "col-md-4";
-    newDiv.innerHTML = productTemplate(_product);
+    newDiv.innerHTML = productTemplate(_product, status);
     document.getElementById("marketplace").appendChild(newDiv);
   });
 }
 
 //returns the template of the product
-function productTemplate(_product) {
+function productTemplate(_product, status) {
   let base = `
     <div class="card mb-4">
       <img class="card-img-top" src="${_product.image}" alt="...">
@@ -159,24 +158,40 @@ function productTemplate(_product) {
           <i class="bi bi-geo-alt-fill"></i>
           <span>${_product.location}</span>
         </p>
-        <div class="d-grid gap-2">
-          <a class="btn btn-lg btn-outline-dark buyBtn fs-6 p-3" id=${
-            _product.index
-          }>
-            Buy for ${_product.price.shiftedBy(-ERC20_DECIMALS).toFixed(2)} cUSD
-          </a>
-        </div>
   `;
   
-  let num = _product.index;
-  // checks if the product is in the wishlist
-  if (Wishlist.includes(num.toString())) {
-    base += `<div class="d-grid gap-2 mt-2"> <a class="btn btn-lg btn btn-danger removeWish" id="${_product.index}">Remove from Wishlist</a></div> </div> </div>`;
-  }
-  // checks if the product is not in the wishlist 
+  // if the status is MyListings then it shows the add Items and delete buttons
+  if (status === "MyListings") {
+     base += `<div class="input-group mb-3">
+     <input type="number" min="1" class="form-control" placeholder="Add Items" aria-label="Add Items" aria-describedby="basic-addon2" id="numberItems${_product.index}">
+     <div class="input-group-append">
+       <button class="btn btn-success addItems" id="${_product.index}" type="button">Add</button>
+     </div>
+   </div>
+   `
+     base += `<div class="d-grid gap-2 mt-2"> <a class="btn btn-lg btn btn-danger deleteProduct" id="${_product.index}">Delete Product</a></div> </div> </div>`
+  } 
+  
+  // if status is not MyListings then it will show the buy button and Wishlist Button
   else {
-    base += `<div class="d-grid gap mt-2"> <a class="btn btn-lg btn btn-pink addWish" id="${_product.index}" 
+    base += ` <div class="d-grid gap-2">
+      <a class="btn btn-lg btn-outline-dark buyBtn fs-6 p-3" id=${
+        _product.index
+      }>
+        Buy for ${_product.price.shiftedBy(-ERC20_DECIMALS).toFixed(2)} cUSD
+      </a>
+    </div>`;
+
+    let num = _product.index;
+    // checks if the product is in the wishlist
+    if (Wishlist.includes(num.toString())) {
+      base += `<div class="d-grid gap-2 mt-2"> <a class="btn btn-lg btn btn-danger removeWish" id="${_product.index}">Remove from Wishlist</a></div> </div> </div>`;
+    }
+    // checks if the product is not in the wishlist
+    else {
+      base += `<div class="d-grid gap mt-2"> <a class="btn btn-lg btn btn-pink addWish" id="${_product.index}" 
       >Add to Wishlist</a></div> </div> </div>`;
+    }
   }
 
   return base;
@@ -281,13 +296,15 @@ document
 // implements buying functionality
 document.querySelector("#marketplace").addEventListener("click", async (e) => {
   // checks if the button clicked is buy button
-  if (e.target.className.includes("buyBtn")) 
-  {
+  if (e.target.className.includes("buyBtn")) {
     const index = e.target.id;
-   // console.log(index);
-    console.log(products[index-1]);
+    // console.log(index);
+    console.log(products[index - 1]);
 
-    if (products[index-1].status === "0" || products[index-1].number_items <= "0") {
+    if (
+      products[index - 1].status === "0" ||
+      products[index - 1].number_items <= "0"
+    ) {
       notification("This item is sold out", "error");
       return;
     }
@@ -296,12 +313,12 @@ document.querySelector("#marketplace").addEventListener("click", async (e) => {
 
     // Calls the approve method
     try {
-      await approve(products[index-1].price);
+      await approve(products[index - 1].price);
     } catch (error) {
       notification(`⚠️ ${error}.`, "error");
     }
 
-    notification(`⌛ Awaiting payment for "${products[index-1].name}"...`);
+    notification(`⌛ Awaiting payment for "${products[index - 1].name}"...`);
 
     // calls the buyProduct method on the contract with the index of the product as parameter
     try {
@@ -309,20 +326,17 @@ document.querySelector("#marketplace").addEventListener("click", async (e) => {
         .buyProduct(index)
         .send({ from: kit.defaultAccount });
       notification(
-        `🎉 You successfully bought "${products[index-1].name}".`,
+        `🎉 You successfully bought "${products[index - 1].name}".`,
         "success"
       );
       getProducts("all");
       getBalance();
-    } 
-    catch (error) {
+    } catch (error) {
       notification(`⚠️ ${error}.`, "error");
     }
-
   }
   // checks if the button clicked is add to wishlist button
   else if (e.target.className.includes("addWish")) {
-
     const index = e.target.id;
     console.log(index);
     notification("⌛ Adding to Wishlist...");
@@ -333,15 +347,11 @@ document.querySelector("#marketplace").addEventListener("click", async (e) => {
         .addToWishlist(index)
         .send({ from: kit.defaultAccount });
 
-      notification(
-        `🎉 You successfully added product to wishlist.`,
-        "success"
-      );
+      notification(`🎉 You successfully added product to wishlist.`, "success");
       //Wishlist.push(index);
       getProducts("all");
       //getBalance();
-    } 
-    catch (error) {
+    } catch (error) {
       // if the transaction fails
       console.log(error);
       notification(`⚠️ ${error}.`, "error");
@@ -349,25 +359,73 @@ document.querySelector("#marketplace").addEventListener("click", async (e) => {
   }
   // checks if the button clicked is remove from wishlist button
   else if (e.target.className.includes("removeWish")) {
-      const index = e.target.id;
-      console.log(index);
-      notification("⌛ Removing from Wishlist...");
+    const index = e.target.id;
+    console.log(index);
+    notification("⌛ Removing from Wishlist...");
 
-      // calls the deleteFromWishlist method on the contract with the index of the product as parameter
-      try {
-         const result = await contract.methods.deleteFromWishlist(index).send({ from: kit.defaultAccount });
-         notification(`🎉 You successfully removed product from wishlist.`, "success");
-         getProducts("all");
-         //getBalance();      
-      } 
-      catch (error) {
-          // if the transcation fails
-          console.log(error);
-          notification(`⚠️ ${error}.`, "error");
-      }
+    // calls the deleteFromWishlist method on the contract with the index of the product as parameter
+    try {
+      const result = await contract.methods
+        .deleteFromWishlist(index)
+        .send({ from: kit.defaultAccount });
+      notification(
+        `🎉 You successfully removed product from wishlist.`,
+        "success"
+      );
+      getProducts("all");
+      
+    } catch (error) {
+      // if the transcation fails
+      console.log(error);
+      notification(`⚠️ ${error}.`, "error");
+    }
   }
+  // checks if the button clicked is Delete Product button
+  else if(e.target.className.includes("deleteProduct")) {
+    const index = e.target.id;
+    console.log(index);
+    notification("⌛ Deleting Product...");
 
-  
+    // calls the deleteProduct method on the contract with the index of the product as parameter
+    try {
+      const result = await contract.methods
+        .Delete(index)
+        .send({ from: kit.defaultAccount });
+      notification(
+        `🎉 You successfully deleted product.`,
+        "success"
+      );
+      getProducts("all");
+     
+    } catch (error) {
+      // if the transcation fails
+      console.log(error);
+      notification(`⚠️ ${error}.`, "error");
+    }
+  }
+  // checks if the button clicked is Add Items button
+  else if(e.target.className.includes("addItems")) {
+    const index = e.target.id;
+    const items = document.getElementById(`numberItems${index}`).value;
+    console.log(index,items);
+    notification("⌛ Adding Items...");
+
+    // calls the addItems method on the contract with the index of the product as parameter
+    try {
+      const result = await contract.methods
+        .addItems(index,items)
+        .send({ from: kit.defaultAccount });
+      notification(
+        `🎉 You successfully added items.`,
+        "success"
+      );
+      getProducts("all");
+    } catch (error) {
+      // if the transcation fails
+      console.log(error);
+      notification(`⚠️ ${error}.`, "error");
+    }
+  }
 });
 
 //rerenders all the products
@@ -386,11 +444,11 @@ document.querySelector("#Balance").addEventListener("click", async () => {
 });
 
 // renders the wishlist
-document.querySelector("#WishlistB").addEventListener("click", async() => {
+document.querySelector("#WishlistB").addEventListener("click", async () => {
   notification("⌛ Loading...");
   await getProducts("Wishlist");
   notificationOff();
-})
+});
 
 // renders the products added by the user
 document.querySelector("#MyListings").addEventListener("click", async () => {
