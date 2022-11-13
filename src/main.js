@@ -76,7 +76,7 @@ const getBalance = async function () {
 };
 
 // gets all the products
-const getProducts = async function () {
+const getProducts = async function (status) {
   const _productsLength = await contract.methods.getProductsLength().call();
   const _products = [];
   for (let i = 1; i < _productsLength; i++) {
@@ -103,7 +103,7 @@ const getProducts = async function () {
   }
   products = await Promise.all(_products);
   await getWishlist();
-  renderProducts();
+  renderProducts(status);
 };
 
 const getWishlist = async () => {
@@ -115,9 +115,23 @@ const getWishlist = async () => {
 };
 
 // renders all the products in the products array
-function renderProducts() {
+function renderProducts(status) {
   document.getElementById("marketplace").innerHTML = "";
-  products.forEach((_product) => {
+  let _Products = products;
+  console.log(status);
+  // filters the products by status
+  if(status !== "MyListings") {
+     _Products = products.filter((p) => p.status == "1");
+  }
+  else {
+    _Products = products.filter((p) => p.owner == kit.defaultAccount);
+  }
+
+  if(status === "Wishlist") {
+      _Products = _Products.filter((p) => Wishlist.includes(p.index.toString()));
+  }
+
+  _Products.forEach((_product) => {
     const newDiv = document.createElement("div");
     newDiv.className = "col-md-4";
     newDiv.innerHTML = productTemplate(_product);
@@ -221,7 +235,7 @@ window.addEventListener("load", async () => {
   notification("⌛ Loading...");
   await connectCeloWallet();
   await getBalance();
-  await getProducts();
+  await getProducts("all");
   notificationOff();
 });
 
@@ -270,17 +284,24 @@ document.querySelector("#marketplace").addEventListener("click", async (e) => {
   if (e.target.className.includes("buyBtn")) 
   {
     const index = e.target.id;
-    console.log(index);
+   // console.log(index);
+    console.log(products[index-1]);
+
+    if (products[index-1].status === "0" || products[index-1].number_items <= "0") {
+      notification("This item is sold out", "error");
+      return;
+    }
+
     notification("⌛ Waiting for payment approval...");
 
     // Calls the approve method
     try {
-      await approve(products[index].price);
+      await approve(products[index-1].price);
     } catch (error) {
       notification(`⚠️ ${error}.`, "error");
     }
 
-    notification(`⌛ Awaiting payment for "${products[index].name}"...`);
+    notification(`⌛ Awaiting payment for "${products[index-1].name}"...`);
 
     // calls the buyProduct method on the contract with the index of the product as parameter
     try {
@@ -288,10 +309,10 @@ document.querySelector("#marketplace").addEventListener("click", async (e) => {
         .buyProduct(index)
         .send({ from: kit.defaultAccount });
       notification(
-        `🎉 You successfully bought "${products[index].name}".`,
+        `🎉 You successfully bought "${products[index-1].name}".`,
         "success"
       );
-      getProducts();
+      getProducts("all");
       getBalance();
     } 
     catch (error) {
@@ -317,7 +338,7 @@ document.querySelector("#marketplace").addEventListener("click", async (e) => {
         "success"
       );
       //Wishlist.push(index);
-      getProducts();
+      getProducts("all");
       //getBalance();
     } 
     catch (error) {
@@ -336,7 +357,7 @@ document.querySelector("#marketplace").addEventListener("click", async (e) => {
       try {
          const result = await contract.methods.deleteFromWishlist(index).send({ from: kit.defaultAccount });
          notification(`🎉 You successfully removed product from wishlist.`, "success");
-         getProducts();
+         getProducts("all");
          //getBalance();      
       } 
       catch (error) {
@@ -352,7 +373,7 @@ document.querySelector("#marketplace").addEventListener("click", async (e) => {
 //rerenders all the products
 document.querySelector("#heading").addEventListener("click", async () => {
   notification("⌛ Loading...");
-  await getProducts();
+  await getProducts("all");
   notificationOff();
   console.log(Wishlist);
 });
@@ -361,5 +382,19 @@ document.querySelector("#heading").addEventListener("click", async () => {
 document.querySelector("#Balance").addEventListener("click", async () => {
   notification("⌛ Loading...");
   await getBalance();
+  notificationOff();
+});
+
+// renders the wishlist
+document.querySelector("#WishlistB").addEventListener("click", async() => {
+  notification("⌛ Loading...");
+  await getProducts("Wishlist");
+  notificationOff();
+})
+
+// renders the products added by the user
+document.querySelector("#MyListings").addEventListener("click", async () => {
+  notification("⌛ Loading...");
+  await getProducts("MyListings");
   notificationOff();
 });
