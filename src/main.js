@@ -185,13 +185,43 @@ function productTemplate(_product, status) {
     let num = _product.index;
     // checks if the product is in the wishlist
     if (Wishlist.includes(num.toString())) {
-      base += `<div class="d-grid gap-2 mt-2"> <a class="btn btn-lg btn btn-danger removeWish" id="${_product.index}">Remove from Wishlist</a></div> </div> </div>`;
+      base += `<div class="d-grid gap-2 mt-2"> <a class="btn btn-lg btn btn-danger removeWish" id="${_product.index}">Remove from Wishlist</a></div>`;
     }
     // checks if the product is not in the wishlist
     else {
       base += `<div class="d-grid gap mt-2"> <a class="btn btn-lg btn btn-pink addWish" id="${_product.index}" 
-      >Add to Wishlist</a></div> </div> </div>`;
+      >Add to Wishlist</a></div>`;
     }
+
+    // Add review button
+    base += `<div class="d-grid gap mt-2"> <a class="btn btn-lg btn-dark Reviews" id="${_product.index}">Reviews</a></div>`;
+
+    // Reviews section
+    base += `
+    <div id="comment-review${_product.index}" style="display: none;">
+    <ul class="d-grid gap dibba mt-3 pt-2 pr-2 pl-2" id="review${_product.index}">
+            <li class=" p-2 comment mt-1">  la la la </li>
+    </ul> 
+    
+    <div class="card-footer py-3 border-0 mt-3" style="background-color: #f8f9fa;">
+            <div class="d-flex flex-start w-100">
+              <div class="form-outline w-100">
+                <textarea class="form-control" id="textAreaExample" rows="4"
+                  style="background: #fff;"></textarea>
+                <label class="form-label" for="textAreaExample">Comment</label>
+              </div>
+            </div>
+            <div class="float-end mt-2 pt-1">
+              <button type="button" class="btn btn-success">Post comment</button>
+            </div>
+      </div>
+
+
+    </div>`;
+
+    base += `</div> </div>`;
+
+
   }
 
   return base;
