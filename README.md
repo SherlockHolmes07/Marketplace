@@ -1,5 +1,5 @@
 # Marketplace DApp
-It is a ecommerce themed DApp built on top of Celo Blockchain employing solidity smart contracts.
+It is a ecommerce theamed DApp built on top of Celo Blockchain employing solidity smart contracts.
 
 <i>I came up with the submission for dacade.org for celo 101 development</i>
 
