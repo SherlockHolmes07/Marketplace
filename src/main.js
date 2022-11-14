@@ -28,16 +28,17 @@ const Categories = [
   "Others",
 ];
 
-let Cat = "All";
-let kit;
-let contract;
-let products = [];
-let Wishlist = [];
+let Cat = "All"; // default category
+let kit; //contractkit
+let contract; //contract variable
+let products = []; // array of products
+let Wishlist = [];  // products added to the wishlist
 
 //Connects the wallet gets the account and initializes the contract
 const connectCeloWallet = async function () {
   //Checks for the wallted
   if (window.celo) {
+    // if the wallet is available it gets the account
     notification("⚠️ Please approve this DApp to use it.");
     try {
       //enables the celo
@@ -55,6 +56,7 @@ const connectCeloWallet = async function () {
       notification(`⚠️ ${error}.`);
     }
   } else {
+    // if the wallet is not available it shows a message
     notification("⚠️ Please install the CeloExtensionWallet.");
   }
 };
@@ -62,7 +64,6 @@ const connectCeloWallet = async function () {
 // Calls for the approval of the transcation
 async function approve(_price) {
   const cUSDContract = new kit.web3.eth.Contract(erc20Abi, cUSDContractAddress);
-
   const result = await cUSDContract.methods
     .approve(MPContractAddress, _price)
     .send({ from: kit.defaultAccount });
@@ -72,16 +73,20 @@ async function approve(_price) {
 // gets the balance of the connected account
 const getBalance = async function () {
   const totalBalance = await kit.getTotalBalance(kit.defaultAccount);
+  // gets the balance in cUSD
   const cUSDBalance = totalBalance.cUSD.shiftedBy(-ERC20_DECIMALS).toFixed(2);
   document.querySelector("#balance").textContent = cUSDBalance;
 };
 
 // gets all the products
 const getProducts = async function (status, cat="") {
+  // calls the getProductsLength function on SmartContract
   const _productsLength = await contract.methods.getProductsLength().call();
   const _products = [];
+  //  loops through all the products
   for (let i = 1; i < _productsLength; i++) {
     let _product = new Promise(async (resolve, reject) => {
+      // calls the readProduct function on SmartContract
       let p = await contract.methods.readProduct(i).call();
       resolve({
         index: i,
@@ -97,18 +102,23 @@ const getProducts = async function (status, cat="") {
         status: p[9],
       });
     });
+    // checks if the product has been deleted
     if (_product.owner == "0x0000000000000000000000000000000000000000") {
       continue;
     }
     _products.push(_product);
   }
+  // waits for all the products to be fetched
   products = await Promise.all(_products);
+
   await getWishlist();
   renderProducts(status);
 };
 
+// gets the wishlist
 const getWishlist = async () => {
   try {
+    // calls the getWishlist function on SmartContract
     Wishlist = await contract.methods.getWishlist().call();
   } catch (e) {
     notification(`${e}`);
@@ -120,13 +130,14 @@ function renderProducts(status) {
   document.getElementById("marketplace").innerHTML = "";
   let _Products = products;
   console.log(status);
+
   // filters the products by status
   if (status !== "MyListings") {
     _Products = products.filter((p) => p.status == "1");
   } else {
     _Products = products.filter((p) => p.owner == kit.defaultAccount);
   }
-
+  // filters the products by Wishlist
   if (status === "Wishlist") {
     _Products = _Products.filter((p) => Wishlist.includes(p.index.toString()));
   }
@@ -232,8 +243,6 @@ function productTemplate(_product, status) {
     </div>`;
 
     base += `</div> </div>`;
-
-
   }
 
   return base;
@@ -342,7 +351,7 @@ document.querySelector("#marketplace").addEventListener("click", async (e) => {
     const index = e.target.id;
     // console.log(index);
     console.log(products[index - 1]);
-
+  
     if (
       products[index - 1].status === "0" ||
       products[index - 1].number_items <= "0"
@@ -515,7 +524,7 @@ document.querySelector("#marketplace").addEventListener("click", async (e) => {
   else if(e.target.className.includes("Postcomment")) {
     const index = e.target.id;
     const comment = document.getElementById(`textAreaExample${index}`).value;
-
+    // checks if the comment is empty
     if(comment === "") {
       notification("⚠️ You have entered an empty Comment.", "error");
       return;

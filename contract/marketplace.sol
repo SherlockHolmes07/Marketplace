@@ -33,6 +33,7 @@ contract Marketplace {
     //Address for the token contract
     address internal cUsdTokenAddress =
         0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1;
+        
     // Status of the product
     enum Status {
         Unavailable,
