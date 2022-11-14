@@ -1,5 +1,5 @@
 # Marketplace DApp
-It is a ecommerce theamed DApp built on top of Celo Blockchain employing solidity smart contracts.
+It is a ecommerce themed DApp built on top of Celo Blockchain employing solidity smart contracts.
 
 <i>I came up with the submission for dacade.org for celo 101 development</i>
 
@@ -9,7 +9,7 @@ It is a ecommerce theamed DApp built on top of Celo Blockchain employing solidit
 <ul>
  
 <li><b>Wishlist:</b> 
- Users can create wishlist of products where they can add different products to their Wishlist and remove them. Users can click Wishlist button on the page to see the products in their Wishlist.
+ Users can create a wishlist of products where they can add different products to their Wishlist and remove them. Users can click Wishlist button on the page to see the products in their Wishlist.
 </li>
 <br />
 <li><b>Adding Reviews:</b>
