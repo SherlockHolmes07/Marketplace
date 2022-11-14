@@ -28,6 +28,7 @@ const Categories = [
   "Others",
 ];
 
+let Cat = "All";
 let kit;
 let contract;
 let products = [];
@@ -76,7 +77,7 @@ const getBalance = async function () {
 };
 
 // gets all the products
-const getProducts = async function (status) {
+const getProducts = async function (status, cat="") {
   const _productsLength = await contract.methods.getProductsLength().call();
   const _products = [];
   for (let i = 1; i < _productsLength; i++) {
@@ -129,6 +130,11 @@ function renderProducts(status) {
   if (status === "Wishlist") {
     _Products = _Products.filter((p) => Wishlist.includes(p.index.toString()));
   }
+ 
+  // filters the products by category
+  if (Cat !== "All" && Cat !== undefined && Cat !== "") {
+    _Products = _Products.filter((p) => p.category == Cat);
+  }
 
   _Products.forEach((_product) => {
     const newDiv = document.createElement("div");
@@ -154,7 +160,10 @@ function productTemplate(_product, status) {
         <p class="card-text mb-1" style="min-height: 65px">
           ${_product.description}             
         </p>
-        <p class="card-text mt-1">
+        <p class="card-text">
+          <b>Category:</b> ${_product.category}        
+        </p>
+        <p class="card-text">
           <i class="bi bi-geo-alt-fill"></i>
           <span>${_product.location}</span>
         </p>
@@ -162,7 +171,11 @@ function productTemplate(_product, status) {
   
   // if the status is MyListings then it shows the add Items and delete buttons
   if (status === "MyListings") {
-     base += `<div class="input-group mb-3">
+     base += `
+     <p class="card-text">
+     <b>Items Availabe:</b> ${_product.number_items}        
+     </p>
+     <div class="input-group mb-3">
      <input type="number" min="1" class="form-control" placeholder="Add Items" aria-label="Add Items" aria-describedby="basic-addon2" id="numberItems${_product.index}">
      <div class="input-group-append">
        <button class="btn btn-success addItems" id="${_product.index}" type="button">Add</button>
@@ -322,7 +335,7 @@ document
     getProducts();
   });
 
-// implements buying functionality
+// implements various functionalities
 document.querySelector("#marketplace").addEventListener("click", async (e) => {
   // checks if the button clicked is buy button
   if (e.target.className.includes("buyBtn")) {
@@ -424,7 +437,7 @@ document.querySelector("#marketplace").addEventListener("click", async (e) => {
         `🎉 You successfully deleted product.`,
         "success"
       );
-      getProducts("all");
+      getProducts("MyListings");
      
     } catch (error) {
       // if the transcation fails
@@ -448,7 +461,7 @@ document.querySelector("#marketplace").addEventListener("click", async (e) => {
         `🎉 You successfully added items.`,
         "success"
       );
-      getProducts("all");
+      getProducts("MyListings");
     } catch (error) {
       // if the transcation fails
       console.log(error);
@@ -535,7 +548,10 @@ document.querySelector("#marketplace").addEventListener("click", async (e) => {
 //rerenders all the products
 document.querySelector("#heading").addEventListener("click", async () => {
   notification("⌛ Loading...");
+  Cat = "All";
   await getProducts("all");
+  document.querySelector("select#DropDown").style.display = "block";
+  document.querySelector("select#DropDown").value = "";
   notificationOff();
   console.log(Wishlist);
 });
@@ -550,13 +566,24 @@ document.querySelector("#Balance").addEventListener("click", async () => {
 // renders the wishlist
 document.querySelector("#WishlistB").addEventListener("click", async () => {
   notification("⌛ Loading...");
+  Cat = "All";
   await getProducts("Wishlist");
+  document.querySelector("select#DropDown").style.display = "none";
   notificationOff();
 });
 
 // renders the products added by the user
 document.querySelector("#MyListings").addEventListener("click", async () => {
   notification("⌛ Loading...");
+  Cat = "All";
   await getProducts("MyListings");
+  document.querySelector("select#DropDown").style.display = "none";
   notificationOff();
+});
+
+
+// renders the products as per the category selected
+document.querySelector("#DropDown").addEventListener("click", async(e) => {
+    Cat = e.target.value;
+    await getProducts("all");
 });

@@ -171,23 +171,36 @@
         </div>
 
         <!-- DropDown for Categories -->
-        <div class="btn-group mb-4">
-          <button
-            type="button"
-            class="btn btn-warning btn-lg dropdown-toggle mt-lg-5 mt-xl-5 mt-md-5 mt-sm-5 mb-sm-3"
-            data-toggle="dropdown"
-            aria-haspopup="true"
-            aria-expanded="false"
-            style="height: 55px"
+        <div class="col mt-5 mb-3 d-flex flex-row-reverse" id="categorySelect">
+          <select
+            class="custom-select btn btn-warning"
+            id="DropDown"
+            style="font-weight: 700; font-size: larger;"
           >
-            Categories
-          </button>
-          <div class="dropdown-menu">
-            <a class="dropdown-item" href="#">Action</a>
-            <a class="dropdown-item" href="#">Another action</a>
-            <a class="dropdown-item" href="#">Something else here</a>
-          </div>
+            <option value="">All Categories</option>
+            <option value="Home Products">Home Products</option>
+            <option value="Fashion & Beauty">Fashion & Beauty</option>
+            <option value="Toys & Games">Toys & Games</option>
+            <option value="Electronics">Electronics</option>
+            <option value="Automotive">Automotive</option>
+            <option value="Books">Books</option>
+            <option value="Cell Phones & Accessories">Cell Phones & Accessories</option>
+            <option value="Clothing & Shoes">Clothing & Shoes</option>
+            <option value="Computers">Computers</option>
+            <option value="Collectibles & Fine Arts">Collectibles & Fine Arts</option>
+            <option value="Handmade">Handmade</option>
+            <option value="Health & Fitness">Health & Fitness</option>
+            <option value="Sports & Outdoors">Sports & Outdoors</option>
+            <option value="Office Products">Office Products</option>
+            <option value="Real Estate">Real Estate</option>
+            <option value="Others">Others</option>
+          </select>
         </div>
+
+
+
+
+
       </div>
 
       <main id="marketplace" class="row"></main>
