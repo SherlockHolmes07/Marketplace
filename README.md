@@ -34,8 +34,6 @@ Users can filter the products based on their category and the products belonging
  <br />
 </ul>
 
-<br />
-
 # Demo : 
 Go to  [Marketplace-Dapp](https://sherlockholmes07.github.io/Marketplace/)
 
