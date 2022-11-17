@@ -54,6 +54,11 @@ contract Marketplace {
         Status status;
     }
 
+    struct Review{
+        address author;
+        string review;
+    }
+
     // mapping uint (ids) to Product(struct)
     mapping(uint256 => Product) internal products;
 
@@ -61,7 +66,7 @@ contract Marketplace {
     mapping(address => uint256[]) internal Wishlist;
 
     //mapping products _index to reviews
-    mapping(uint256 => string[]) internal reviews;
+    mapping(uint256 => Review[]) internal reviews;
 
     //onlyOwner modifier
     modifier onlyOwner(uint256 _index) {
@@ -123,7 +128,7 @@ contract Marketplace {
     }
 
     //buy product
-    function buyProduct(uint256 _index) public payable notDeleted(_index) {
+    function buyProduct(uint256 _index) public payable notDeleted(_index){
         //checks if items available
         require(
             products[_index].numberItems >= 1,
@@ -184,9 +189,20 @@ contract Marketplace {
         notDeleted(_index)
         onlyOwner(_index)
     {
+        // make sure that number of items is at least one
         require(_numberItems >= 1, "Should add atleast one item");
         products[_index].numberItems += _numberItems;
         products[_index].status = Status.Available;
+    }
+
+    // make status of product available by the owner
+    function makeStatusAvailable(uint _index) public notDeleted(_index) onlyOwner(_index){
+        products[_index].status = Status.Available;
+    }
+
+    // make status of product available by the owner
+    function makeStatusUnAvailable(uint _index) public notDeleted(_index) onlyOwner(_index){
+        products[_index].status = Status.Unavailable;
     }
 
     // Deletes the product with index
@@ -200,7 +216,10 @@ contract Marketplace {
         public
         notDeleted(_index)
     {
-        reviews[_index].push(_review);
+       reviews[_index].push(Review(
+        msg.sender,
+        _review
+       ));
     }
 
     // Returns all the reviews for a product with the _index
@@ -208,7 +227,7 @@ contract Marketplace {
         public
         view
         notDeleted(_index)
-        returns (string[] memory)
+        returns (Review[] memory)
     {
         return reviews[_index];
     }
