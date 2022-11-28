@@ -55,13 +55,13 @@ contract Marketplace {
     }
 
     // mapping uint (ids) to Product(struct)
-    mapping(uint256 => Product) internal products;
+    mapping(uint256 => Product) private products;
 
     //mapping address(users) to uint[] (list of products) for Wishlist
-    mapping(address => uint256[]) internal Wishlist;
+    mapping(address => uint256[]) private Wishlist;
 
     //mapping products _index to reviews
-    mapping(uint256 => string[]) internal reviews;
+    mapping(uint256 => string[]) private reviews;
 
     //onlyOwner modifier
     modifier onlyOwner(uint256 _index) {
@@ -76,23 +76,28 @@ contract Marketplace {
     modifier notDeleted(uint256 _index) {
         require(
             products[_index].owner !=
-                0x0000000000000000000000000000000000000000,
+                address(0),
             "No product on this index"
         );
         _;
     }
 
-    // sets the Proudct
+    /// @dev allow sellers to create and  sets a Product they want to sell
+    /// @notice Input data needs to contain only valid and non-empty values
     function writeProduct(
-        //Parmeters passed
-        string memory _name,
-        string memory _image,
-        string memory _description,
-        string memory _location,
+        string calldata _name,
+        string calldata _image,
+        string calldata _description,
+        string calldata _location,
         string memory _category,
         uint256 _price,
         uint256 _numberItems
     ) public {
+        require(bytes(_name).length > 0,"Empty name");
+        require(bytes(_image).length > 0,"Empty image");
+        require(bytes(_description).length > 0,"Empty description");
+        require(bytes(_location).length > 0,"Empty location");
+        require(bytes(_category).length > 0,"Empty category");
         // 0 items sold initially
         uint256 _sold = 0;
         require(
@@ -117,33 +122,35 @@ contract Marketplace {
         productsLength++;
     }
 
-    // Returns all the product attributes for Proudct with provided _index
+    // Return all the product attributes for Proudct with provided _index
     function readProduct(uint256 _index) public view returns (Product memory) {
         return products[_index];
     }
 
-    //buy product
+    /// @dev allow users to buy products available on the platform
     function buyProduct(uint256 _index) public payable notDeleted(_index) {
+        Product storage currentProduct = products[_index];
         //checks if items available
         require(
-            products[_index].numberItems >= 1,
+            currentProduct.numberItems >= 1,
             "If the items a avaiable or not!"
         );
+        require(currentProduct.owner != msg.sender, "You are not allowed to buy your products");
         //transfers tokens for sender to products owner
         require(
             IERC20Token(cUsdTokenAddress).transferFrom(
                 msg.sender,
-                products[_index].owner,
-                products[_index].price
+                currentProduct.owner,
+                currentProduct.price
             ),
             "Transfer failed."
         );
-        //increase the sold count for a product
-        products[_index].sold++;
-        //decrease the number_items for a product
-        products[_index].numberItems--;
-        if (products[_index].numberItems == 0) {
-            products[_index].status = Status.Unavailable;
+        //increases the sold count for a product
+        currentProduct.sold++;
+        //decreases the number_items for a product
+        currentProduct.numberItems--;
+        if (currentProduct.numberItems == 0) {
+            currentProduct.status = Status.Unavailable;
         }
     }
 
@@ -152,25 +159,21 @@ contract Marketplace {
         return (productsLength);
     }
 
-    //Adds the product with the provided index to the Wishlist
+    /// @dev Adds the product with the provided index to the Wishlist
     function addToWishlist(uint256 _index) public notDeleted(_index) {
-        // Checks if the product with the index exists
-        require(
-            _index < productsLength,
-            "There is no product with this _index"
-        );
         Wishlist[msg.sender].push(_index);
     }
 
-    //Returns the list of products in callers Wishlist
+    // Returns the list of products in caller's wishlist
     function getWishlist() public view returns (uint256[] memory) {
         return Wishlist[msg.sender];
     }
 
-    // Delete Item from the Wishlist
+    // Deletes an item/product from the Wishlist of the caller
     function deleteFromWishlist(uint256 _item) public {
-        // Loops through the array on Wishlist mapping for msg.sender
-        for (uint256 i = 0; i < Wishlist[msg.sender].length; i++) {
+        uint wishlistLength = Wishlist[msg.sender].length;
+        // Loops through the array on wishlist mapping for msg.sender
+        for (uint256 i = 0; i < wishlistLength; i++) {
             // if it has item then delete it
             if (Wishlist[msg.sender][i] == _item) {
                 delete Wishlist[msg.sender][i];
@@ -178,7 +181,7 @@ contract Marketplace {
         }
     }
 
-    //Adds to the numberItems  in product
+    /// @dev allow products' owners to increase the numberItems of their product
     function addItems(uint256 _index, uint256 _numberItems)
         public
         notDeleted(_index)
@@ -189,17 +192,18 @@ contract Marketplace {
         products[_index].status = Status.Available;
     }
 
-    // Deletes the product with index
+    /// @dev allow the product's owner to delete the product with index
     function Delete(uint256 _index) public onlyOwner(_index) {
         delete products[_index];
         delete reviews[_index];
     }
 
-    //Adds the review
-    function addReview(uint256 _index, string memory _review)
+    /// @dev allow a user to review a product
+    function addReview(uint256 _index, string calldata _review)
         public
         notDeleted(_index)
     {
+        require(bytes(_review).length > 0, "Review message can't be empty");
         reviews[_index].push(_review);
     }
 
